@@ -1,0 +1,21 @@
+services:
+  redis:
+    image: redis:7
+    container_name: wallet-redis
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:16
+    container_name: wallet-postgres
+    environment:
+      POSTGRES_DB: wallet
+      POSTGRES_USER: wallet
+      POSTGRES_PASSWORD: wallet
+    ports:
+      - "5432:5432"
+    volumes:
+      - wallet-pgdata:/var/lib/postgresql/data
+
+volumes:
+  wallet-pgdata:
