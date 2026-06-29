@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test":    "k6 run test.js",
+    "test:v2": "k6 run test.js -e VERSION=v2",
+    "test:v3": "k6 run test.js -e VERSION=v3",
+    "test:v4": "k6 run test.js -e VERSION=v4"
+  },
+  "dependencies": {
+    "k6": "^0.0.0"
+  }
+}
