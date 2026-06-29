@@ -8,9 +8,6 @@
 ## 핵심 목표
 
 - 동시성 전략별 **TPS / 정합성 실측** (k6 부하테스트)
-- 한도요구불 수신 도메인 구현 (개설 / 입금 / 지급 / 해지 / 환급)
-- 유량제어 (Rate Limiting)
-- 대용량 배치 (월말 이자 계산)
 
 ---
 
@@ -83,17 +80,17 @@ PostgreSQL 16 (`:5432`) + Redis 7 (`:6379`) 컨테이너가 함께 기동된다.
 
 ### 3. k6 부하테스트
 
+지갑 생성·초기 입금은 `test.js`의 `setup()`이 자동으로 처리한다.
+
 ```bash
-# 지갑 생성 후 초기 잔액 입금
-WALLET_ID=<생성된 ID>
+make test        # 전체 순차 실행 (v2 → v3 → v4, 약 2.5분)
+make test-v2     # v2 비관적락만
+make test-v3     # v3 낙관적락 + 멱등성만
+make test-v4     # v4 Redis 분산락만
 
-# 전략별 측정 (WITHDRAW_URL 교체)
-k6 run -e WALLET_ID=$WALLET_ID \
-       -e WITHDRAW_URL=http://localhost:8080/api/v1/wallets/$WALLET_ID/withdraw \
-       withdraw-race.js
-
-# Redis 분산락
-k6 run -e WALLET_ID=$WALLET_ID v4-redis-lock-test.js
+# make 없을 경우 (make 설치: sudo apt-get install -y make)
+k6 run test.js
+k6 run test.js -e VERSION=v2
 ```
 
 ---
@@ -128,10 +125,8 @@ src/
         ├── OptimisticIdempotentServiceTest.java
         └── RedisTransactionServiceTest.java
 
-k6/
-├── withdraw-race.js        # v0~v2 공용 (WITHDRAW_URL 환경변수로 교체)
-├── v3-idempotent-test.js   # v2.5 정합성 + 멱등성
-└── v4-redis-lock-test.js   # v4 Redis 분산락
+test.js                     # 전체 통합 k6 테스트 (VERSION=v2|v3|v4 로 개별 실행 가능)
+Makefile                    # make test / test-v2 / test-v3 / test-v4
 ```
 
 ---
@@ -142,7 +137,7 @@ k6/
 |------|------|:----:|
 | Month 1 | Race condition 재현 (naive + k6) | ✅ |
 | Month 2 | 비관적 락 → 낙관적 락 → 멱등성 키 → Redis 분산락 TPS 비교 | ✅ |
-| Month 3 | 한도요구불 도메인 통합 (개설 / 입금 / 지급 / 해지 / 환급) | 🔜 |
+| Month 3 | 한도요구불 도메인 → 별도 프로젝트로 분리 | ↗ 분리 |
 | Month 4 | Docker, k8s, Prometheus / Grafana, CI/CD | 🔜 |
 | Month 5 | RAG 백엔드 (pgvector + 평가 파이프라인) | 🔜 |
 | Month 6 | 포트폴리오 패키징 + 지원 | 🔜 |
