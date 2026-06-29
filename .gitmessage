@@ -1,0 +1,8 @@
+# [feat|fix|refactor|test|docs] 한 줄 설명
+#
+# 예시:
+#   feat: 입금 한도 검증 로직 추가
+#   fix: 동시 출금 시 잔액 음수 버그 수정
+#   refactor: OptimisticRetryTemplate 추출
+#   test: Redis 분산락 통합 테스트 추가
+#   docs: README k6 실행 방법 업데이트
