@@ -47,7 +47,6 @@ public class PessimisticTransactionService {
     @Transactional
     public List<Transaction> withdraw(Long walletId, Long withdrawAmount) {
 
-        //TODO Exception 처리 방식 고민
         // wallet 있는지 확인
         Wallet wallet = walletRepository.findByIdForUpdate(walletId).orElseThrow(() -> new IllegalArgumentException("해당지갑을 찾을 수 없습니다"));
 
