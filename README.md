@@ -46,6 +46,9 @@
 - **v2.5 멱등성 키**: 낙관적 락 위에 DB UNIQUE 제약으로 네트워크 재시도(중복 클릭) 방어.
 - **v4 Redis 분산락**: Redis에서 락 관리 → 앱 서버 N대에서도 정합성 보장. 단일 인스턴스에서는 Redis 왕복 오버헤드로 가장 느림.
 
+측정 조건·재측정 이력(sleep 버그 수정 전/후)·알려진 이슈는 [docs/benchmarks/lock-strategy-comparison.md](docs/benchmarks/lock-strategy-comparison.md) 참고.
+설계 결정 상세는 [docs/adr/](docs/adr/) 참고.
+
 ---
 
 ## API 엔드포인트
