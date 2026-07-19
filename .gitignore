@@ -46,3 +46,7 @@ logs/
 
 ### Testcontainers ###
 .testcontainers.properties
+
+### npm (k6 타입 스텁용, 커밋 대상 아님) ###
+node_modules/
+package-lock.json
