@@ -2,16 +2,22 @@ import http from 'k6/http';
 import { check } from 'k6';
 import { Counter } from 'k6/metrics';
 
-// k6 run test.js                  → 전체 순차 실행 (v2 → v3 → v4)
+// k6 run test.js                  → 전체 순차 실행 (v1 → v2 → v3 → v4)
+// k6 run test.js -e VERSION=v1    → v1만
 // k6 run test.js -e VERSION=v2    → v2만
 // k6 run test.js -e VERSION=v3    → v3만
 // k6 run test.js -e VERSION=v4    → v4만
 
 const BASE    = __ENV.BASE_URL || 'http://localhost:8080';
-const VERSION = __ENV.VERSION;          // v2 | v3 | v4 | (unset = all)
+const VERSION = __ENV.VERSION;          // v1 | v2 | v3 | v4 | (unset = all)
 const runAll  = !VERSION || VERSION === 'all';
 
+const v1Success            = new Counter('v1_success');
+const v1Insufficient       = new Counter('v1_insufficient_400');
+const v1Conflict           = new Counter('v1_conflict_409');
 const v2Success            = new Counter('v2_success');
+const v2Insufficient       = new Counter('v2_insufficient_400');
+const v2Conflict           = new Counter('v2_conflict_409');
 const v3ConsistencySuccess = new Counter('v3_consistency_success');
 const v3Conflict           = new Counter('v3_conflict_409');
 const v3IdempotencySuccess = new Counter('v3_idempotency_success');
@@ -19,14 +25,23 @@ const v4Success            = new Counter('v4_success');
 
 // 전체 실행 시 순차 오프셋, 개별 실행 시 0s 기준
 const startAt = {
-  v2:  runAll ? '0s'   : '0s',
-  v3c: runAll ? '35s'  : '0s',
-  v3i: runAll ? '70s'  : '35s',
-  v4:  runAll ? '105s' : '0s',
+  v1:  runAll ? '0s'   : '0s',
+  v2:  runAll ? '35s'  : '0s',
+  v3c: runAll ? '70s'  : '0s',
+  v3i: runAll ? '105s' : '35s',
+  v4:  runAll ? '140s' : '0s',
 };
 
 const scenarios = {};
 
+if (!VERSION || VERSION === 'v1') {
+  scenarios.v1_race = {
+    executor: 'shared-iterations',
+    vus: 100, iterations: 200, maxDuration: '30s',
+    startTime: startAt.v1,
+    exec: 'v1Test',
+  };
+}
 if (!VERSION || VERSION === 'v2') {
   scenarios.v2_race = {
     executor: 'shared-iterations',
@@ -66,6 +81,13 @@ export function setup() {
   const h = { 'Content-Type': 'application/json' };
   const result = {};
 
+  if (!VERSION || VERSION === 'v1') {
+    const res = http.post(`${BASE}/api/user/signUp`, JSON.stringify({ name: 'test-v1' }), { headers: h });
+    result.v1Id = JSON.parse(res.body).walletId;
+    http.post(`${BASE}/api/v1/wallets/${result.v1Id}/deposit`, JSON.stringify({ amount: 10000 }), { headers: h });
+    console.log(`[setup] v1 wallet=${result.v1Id} (10,000원)`);
+  }
+
   if (!VERSION || VERSION === 'v2') {
     const res = http.post(`${BASE}/api/user/signUp`, JSON.stringify({ name: 'test-v2' }), { headers: h });
     result.v2Id = JSON.parse(res.body).walletId;
@@ -100,6 +122,18 @@ export function setup() {
 
 // ─── Test functions ───────────────────────────────────────────────────────────
 
+export function v1Test(data) {
+  const res = http.post(
+    `${BASE}/api/v1/wallets/${data.v1Id}/withdraw`,
+    JSON.stringify({ amount: 100 }),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+  if (res.status === 200) v1Success.add(1);
+  else if (res.status === 400) v1Insufficient.add(1);
+  else if (res.status === 409) v1Conflict.add(1);
+  check(res, { '[v1] 허용된 응답': (r) => r.status === 200 || r.status === 400 || r.status === 409 });
+}
+
 export function v2Test(data) {
   const res = http.post(
     `${BASE}/api/v2/wallets/${data.v2Id}/withdraw`,
@@ -107,6 +141,8 @@ export function v2Test(data) {
     { headers: { 'Content-Type': 'application/json' } }
   );
   if (res.status === 200) v2Success.add(1);
+  else if (res.status === 400) v2Insufficient.add(1);
+  else if (res.status === 409) v2Conflict.add(1);
   check(res, { '[v2] 허용된 응답': (r) => r.status === 200 || r.status === 400 || r.status === 409 });
 }
 
@@ -144,9 +180,17 @@ export function v4Test(data) {
 // ─── Teardown ─────────────────────────────────────────────────────────────────
 
 export function teardown(data) {
+  if (data.v1Id) {
+    const body = JSON.parse(http.get(`${BASE}/api/wallets/${data.v1Id}`).body);
+    console.log('\n========== [v1 비관적락] 정합성 검증 ==========');
+    console.log(`최종 잔액: ${body.balance}원   기대: 0원 이상`);
+    console.log(body.balance >= 0 ? `  ✓ PASS` : `  ✗ FAIL — 잔액 ${body.balance}원 (음수 → 정합성 깨짐)`);
+    console.log('=================================================');
+  }
+
   if (data.v2Id) {
     const body = JSON.parse(http.get(`${BASE}/api/wallets/${data.v2Id}`).body);
-    console.log('\n========== [v2 비관적락] 정합성 검증 ==========');
+    console.log('\n========== [v2 낙관적락] 정합성 검증 ==========');
     console.log(`최종 잔액: ${body.balance}원   기대: 0원 이상`);
     console.log(body.balance >= 0 ? `  ✓ PASS` : `  ✗ FAIL — 잔액 ${body.balance}원 (음수 → 정합성 깨짐)`);
     console.log('=================================================');
