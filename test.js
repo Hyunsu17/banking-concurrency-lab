@@ -80,6 +80,8 @@ export const options = { scenarios };
 export function setup() {
   const h = { 'Content-Type': 'application/json' };
   const result = {};
+  const runId = Date.now(); // 재실행 시 멱등키 충돌 방지 (VU/ITER 번호는 실행마다 재사용됨)
+  result.runId = runId;
 
   if (!VERSION || VERSION === 'v1') {
     const res = http.post(`${BASE}/api/user/signUp`, JSON.stringify({ name: 'test-v1' }), { headers: h });
@@ -99,12 +101,12 @@ export function setup() {
     const resA = http.post(`${BASE}/api/user/signUp`, JSON.stringify({ name: 'test-v3-consistency' }), { headers: h });
     result.v3ConsistencyId = JSON.parse(resA.body).walletId;
     http.post(`${BASE}/api/v3/wallets/${result.v3ConsistencyId}/deposit`, JSON.stringify({ amount: 10000 }),
-      { headers: { ...h, 'Idempotency-Key': 'setup-v3-consistency' } });
+      { headers: { ...h, 'Idempotency-Key': `setup-v3-consistency-${runId}` } });
 
     const resB = http.post(`${BASE}/api/user/signUp`, JSON.stringify({ name: 'test-v3-idempotency' }), { headers: h });
     result.v3IdempotencyId = JSON.parse(resB.body).walletId;
     http.post(`${BASE}/api/v3/wallets/${result.v3IdempotencyId}/deposit`, JSON.stringify({ amount: 5000 }),
-      { headers: { ...h, 'Idempotency-Key': 'setup-v3-idempotency' } });
+      { headers: { ...h, 'Idempotency-Key': `setup-v3-idempotency-${runId}` } });
 
     console.log(`[setup] v3-consistency wallet=${result.v3ConsistencyId} (10,000원)`);
     console.log(`[setup] v3-idempotency wallet=${result.v3IdempotencyId} (5,000원)`);
@@ -150,7 +152,7 @@ export function v3ConsistencyTest(data) {
   const res = http.post(
     `${BASE}/api/v3/wallets/${data.v3ConsistencyId}/withdraw`,
     JSON.stringify({ amount: 100 }),
-    { headers: { 'Content-Type': 'application/json', 'Idempotency-Key': `v3-consistency-vu${__VU}-iter${__ITER}` } }
+    { headers: { 'Content-Type': 'application/json', 'Idempotency-Key': `v3-consistency-vu${__VU}-iter${__ITER}-${data.runId}` } }
   );
   if (res.status === 200) v3ConsistencySuccess.add(1);
   if (res.status === 409) v3Conflict.add(1);
@@ -161,7 +163,7 @@ export function v3IdempotencyTest(data) {
   const res = http.post(
     `${BASE}/api/v3/wallets/${data.v3IdempotencyId}/withdraw`,
     JSON.stringify({ amount: 100 }),
-    { headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'v3-idempotency-fixed-key' } }
+    { headers: { 'Content-Type': 'application/json', 'Idempotency-Key': `v3-idempotency-fixed-key-${data.runId}` } }
   );
   if (res.status === 200) v3IdempotencySuccess.add(1);
   check(res, { '[v3-멱등성] 허용된 응답': (r) => r.status === 200 || r.status === 400 || r.status === 409 });
