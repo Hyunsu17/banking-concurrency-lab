@@ -1,0 +1,177 @@
+################ v1 ################
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 1m0s max duration (incl. graceful stop):
+              * v1_race: 200 iterations shared among 100 VUs (maxDuration: 30s, exec: v1Test, gracefulStop: 30s)
+
+time="2026-07-26T13:37:23+09:00" level=info msg="[setup] v1 wallet=39 (10,000원)" source=console
+
+running (0m01.0s), 100/100 VUs, 4 complete and 0 interrupted iterations
+v1_race   [   2% ] 100 VUs  00.5s/30s  004/200 shared iters
+time="2026-07-26T13:37:25+09:00" level=info msg="\n========== [v1 비관적락] 정합성 검증 ==========" source=console
+time="2026-07-26T13:37:25+09:00" level=info msg="최종 잔액: 0원   기대: 0원 이상" source=console
+time="2026-07-26T13:37:25+09:00" level=info msg="  ✓ PASS" source=console
+time="2026-07-26T13:37:25+09:00" level=info msg="=================================================" source=console
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 200     110.362559/s
+    checks_succeeded...: 100.00% 200 out of 200
+    checks_failed......: 0.00%   0 out of 200
+
+    ✓ [v1] 허용된 응답
+
+    CUSTOM
+    v1_insufficient_400............: 100    55.18128/s
+    v1_success.....................: 100    55.18128/s
+
+    HTTP
+    http_req_duration..............: avg=629.17ms min=5.28ms med=450.74ms max=1.28s p(90)=1.2s  p(95)=1.24s
+      { expected_response:true }...: avg=1.09s    min=6.34ms med=1.18s    max=1.28s p(90)=1.24s p(95)=1.26s
+    http_req_failed................: 49.26% 100 out of 203
+    http_reqs......................: 203    112.017998/s
+
+    EXECUTION
+    iteration_duration.............: avg=638.69ms min=5.56ms med=612.97ms max=1.29s p(90)=1.22s p(95)=1.24s
+    iterations.....................: 200    110.362559/s
+    vus............................: 100    min=100        max=100
+    vus_max........................: 100    min=100        max=100
+
+    NETWORK
+    data_received..................: 864 kB 477 kB/s
+    data_sent......................: 33 kB  18 kB/s
+
+
+
+
+running (0m01.8s), 000/100 VUs, 200 complete and 0 interrupted iterations
+v1_race ✓ [ 100% ] 100 VUs  01.3s/30s  200/200 shared iters
+################ v2 ################
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 1m0s max duration (incl. graceful stop):
+              * v2_race: 200 iterations shared among 100 VUs (maxDuration: 30s, exec: v2Test, gracefulStop: 30s)
+
+time="2026-07-26T13:37:25+09:00" level=info msg="[setup] v2 wallet=40 (10,000원)" source=console
+
+running (0m01.0s), 006/100 VUs, 194 complete and 0 interrupted iterations
+v2_race   [  97% ] 100 VUs  00.9s/30s  194/200 shared iters
+time="2026-07-26T13:37:26+09:00" level=info msg="\n========== [v2 낙관적락] 정합성 검증 ==========" source=console
+time="2026-07-26T13:37:26+09:00" level=info msg="최종 잔액: 2500원   기대: 0원 이상" source=console
+time="2026-07-26T13:37:26+09:00" level=info msg="  ✓ PASS" source=console
+time="2026-07-26T13:37:26+09:00" level=info msg="=================================================" source=console
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 200     197.199865/s
+    checks_succeeded...: 100.00% 200 out of 200
+    checks_failed......: 0.00%   0 out of 200
+
+    ✓ [v2] 허용된 응답
+
+    CUSTOM
+    v2_conflict_409................: 125    123.249916/s
+    v2_success.....................: 75     73.949949/s
+
+    HTTP
+    http_req_duration..............: avg=370.79ms min=3.07ms  med=404.29ms max=640.79ms p(90)=529.92ms p(95)=557.49ms
+      { expected_response:true }...: avg=245.58ms min=3.07ms  med=200.48ms max=640.79ms p(90)=462.83ms p(95)=573.97ms
+    http_req_failed................: 61.57% 125 out of 203
+    http_reqs......................: 203    200.157863/s
+
+    EXECUTION
+    iteration_duration.............: avg=377.99ms min=10.57ms med=405.11ms max=641.26ms p(90)=531.37ms p(95)=569.84ms
+    iterations.....................: 200    197.199865/s
+    vus............................: 6      min=6          max=6  
+    vus_max........................: 100    min=100        max=100
+
+    NETWORK
+    data_received..................: 498 kB 491 kB/s
+    data_sent......................: 33 kB  33 kB/s
+
+
+
+
+running (0m01.0s), 000/100 VUs, 200 complete and 0 interrupted iterations
+v2_race ✓ [ 100% ] 100 VUs  01.0s/30s  200/200 shared iters
+################ v4 ################
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 1m0s max duration (incl. graceful stop):
+              * v4_race: 200 iterations shared among 100 VUs (maxDuration: 30s, exec: v4Test, gracefulStop: 30s)
+
+time="2026-07-26T13:37:26+09:00" level=info msg="[setup] v4 wallet=41 (10,000원)" source=console
+
+running (0m01.0s), 100/100 VUs, 88 complete and 0 interrupted iterations
+v4_race   [  44% ] 100 VUs  01.0s/30s  088/200 shared iters
+time="2026-07-26T13:37:28+09:00" level=info msg="\n========== [v4 Redis분산락] 정합성 검증 ==========" source=console
+time="2026-07-26T13:37:28+09:00" level=info msg="최종 잔액: 0원   기대: 0원 이상" source=console
+time="2026-07-26T13:37:28+09:00" level=info msg="  ✓ PASS" source=console
+time="2026-07-26T13:37:28+09:00" level=info msg="===================================================" source=console
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 200     137.772691/s
+    checks_succeeded...: 100.00% 200 out of 200
+    checks_failed......: 0.00%   0 out of 200
+
+    ✓ [v4] 허용된 응답
+
+    CUSTOM
+    v4_insufficient_400............: 100    68.886346/s
+    v4_success.....................: 100    68.886346/s
+
+    HTTP
+    http_req_duration..............: avg=606.3ms  min=3.29ms med=626.58ms max=1.36s p(90)=955.72ms p(95)=996.32ms
+      { expected_response:true }...: avg=539.07ms min=3.29ms med=552.35ms max=1.04s p(90)=935.93ms p(95)=987.67ms
+    http_req_failed................: 49.26% 100 out of 203
+    http_reqs......................: 203    139.839281/s
+
+    EXECUTION
+    iteration_duration.............: avg=617.7ms  min=5.09ms med=631.71ms max=1.36s p(90)=958.43ms p(95)=997.44ms
+    iterations.....................: 200    137.772691/s
+    vus............................: 100    min=100        max=100
+    vus_max........................: 100    min=100        max=100
+
+    NETWORK
+    data_received..................: 865 kB 596 kB/s
+    data_sent......................: 33 kB  23 kB/s
+
+
+
+
+running (0m01.5s), 000/100 VUs, 200 complete and 0 interrupted iterations
+v4_race ✓ [ 100% ] 100 VUs  01.4s/30s  200/200 shared iters

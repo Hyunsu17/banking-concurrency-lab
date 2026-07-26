@@ -1,0 +1,53 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: test.js
+        output: csv (/tmp/v1b.csv)
+
+     scenarios: (100.00%) 1 scenario, 100 max VUs, 1m0s max duration (incl. graceful stop):
+              * v1_race: 200 iterations shared among 100 VUs (maxDuration: 30s, exec: v1Test, gracefulStop: 30s)
+
+time="2026-07-26T14:16:19+09:00" level=info msg="[setup] v1 wallet=56 (10,000원)" source=console
+time="2026-07-26T14:16:20+09:00" level=info msg="\n========== [v1 비관적락] 정합성 검증 ==========" source=console
+time="2026-07-26T14:16:20+09:00" level=info msg="최종 잔액: 0원   기대: 0원 이상" source=console
+time="2026-07-26T14:16:20+09:00" level=info msg="  ✓ PASS" source=console
+time="2026-07-26T14:16:20+09:00" level=info msg="=================================================" source=console
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 200     240.776686/s
+    checks_succeeded...: 100.00% 200 out of 200
+    checks_failed......: 0.00%   0 out of 200
+
+    ✓ [v1] 허용된 응답
+
+    CUSTOM
+    v1_insufficient_400............: 100    120.388343/s
+    v1_success.....................: 100    120.388343/s
+
+    HTTP
+    http_req_duration..............: avg=371.11ms min=3.43ms  med=85.28ms  max=767.15ms p(90)=687.59ms p(95)=698.48ms
+      { expected_response:true }...: avg=651.14ms min=3.43ms  med=677.58ms max=767.15ms p(90)=697.5ms  p(95)=745.02ms
+    http_req_failed................: 49.26% 100 out of 203
+    http_reqs......................: 203    244.388337/s
+
+    EXECUTION
+    iteration_duration.............: avg=378.73ms min=20.03ms med=358.78ms max=771.08ms p(90)=693.38ms p(95)=704.01ms
+    iterations.....................: 200    240.776686/s
+
+    NETWORK
+    data_received..................: 870 kB 1.0 MB/s
+    data_sent......................: 33 kB  40 kB/s
+
+
+
+
+running (0m00.8s), 000/100 VUs, 200 complete and 0 interrupted iterations
+v1_race ✓ [ 100% ] 100 VUs  00.8s/30s  200/200 shared iters
