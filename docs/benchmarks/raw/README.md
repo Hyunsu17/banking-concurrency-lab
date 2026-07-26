@@ -35,6 +35,7 @@ make test-v4
 L=docs/benchmarks/raw/2026-07-26-redis-monitor-v4.txt
 
 # 명령별 횟수 — 201(획득) + 397(튕김) = 598(시도)
+#   201 = 출금 200건 + k6 setup()의 초기 예치 1건 (v4는 deposit도 같은 락을 거친다)
 awk '{for(i=1;i<=NF;i++) if($i ~ /^"[A-Za-z]+"$/){print $i; break}}' $L | sort | uniq -c | sort -rn
 
 # 락 하나의 생애주기 (EVAL 줄에 스크립트 전문이 있으므로 가로를 자른다)
