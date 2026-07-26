@@ -22,6 +22,8 @@ const v3ConsistencySuccess = new Counter('v3_consistency_success');
 const v3Conflict           = new Counter('v3_conflict_409');
 const v3IdempotencySuccess = new Counter('v3_idempotency_success');
 const v4Success            = new Counter('v4_success');
+const v4Insufficient       = new Counter('v4_insufficient_400');
+const v4Conflict           = new Counter('v4_conflict_409');
 
 // 전체 실행 시 순차 오프셋, 개별 실행 시 0s 기준
 const startAt = {
@@ -176,6 +178,8 @@ export function v4Test(data) {
     { headers: { 'Content-Type': 'application/json' } }
   );
   if (res.status === 200) v4Success.add(1);
+  else if (res.status === 400) v4Insufficient.add(1);
+  else if (res.status === 409) v4Conflict.add(1);
   check(res, { '[v4] 허용된 응답': (r) => r.status === 200 || r.status === 400 || r.status === 409 });
 }
 
@@ -213,7 +217,7 @@ export function teardown(data) {
   }
 
   if (data.v4Id) {
-    const body = JSON.parse(http.get(`${BASE}/api/v4/wallets/${data.v4Id}/transactions`).body);
+    const body = JSON.parse(http.get(`${BASE}/api/wallets/${data.v4Id}`).body);
     console.log('\n========== [v4 Redis분산락] 정합성 검증 ==========');
     console.log(`최종 잔액: ${body.balance}원   기대: 0원 이상`);
     console.log(body.balance >= 0 ? `  ✓ PASS` : `  ✗ FAIL`);
